@@ -4441,12 +4441,10 @@ static void menu_driver_set_last_shader_path_int(
       char *shader_dir, size_t dir_len,
       char *shader_file, size_t file_len)
 {
-   const char *file_name = NULL;
-
-   if (!type ||
-       !shader_dir ||
+   if (!type         ||
+       !shader_dir   ||
        (dir_len < 1) ||
-       !shader_file ||
+       !shader_file  ||
        (file_len < 1))
       return;
 
@@ -4477,9 +4475,7 @@ static void menu_driver_set_last_shader_path_int(
       return;
 
    /* Cache file name */
-   file_name = path_basename(shader_path);
-   if (!string_is_empty(file_name))
-      strlcpy(shader_file, file_name, file_len);
+   fill_pathname_base(shader_file, shader_path, file_len);
 }
 
 void menu_driver_set_last_shader_preset_path(const char *path)
@@ -4663,7 +4659,6 @@ void menu_driver_set_last_start_content(const char *start_content_path)
    menu_handle_t *menu         = p_rarch->menu_driver_data;
    settings_t *settings        = p_rarch->configuration_settings;
    bool use_last               = settings->bools.use_last_start_directory;
-   const char *archive_delim   = NULL;
    const char *file_name       = NULL;
    char archive_path[PATH_MAX_LENGTH];
 
@@ -4684,30 +4679,31 @@ void menu_driver_set_last_start_content(const char *start_content_path)
    fill_pathname_parent_dir(menu->last_start_content.directory,
          start_content_path, sizeof(menu->last_start_content.directory));
 
-   /* Cache file name */
-   archive_delim      = path_get_archive_delim(start_content_path);
-   if (archive_delim)
-   {
-      /* If path references a file inside an
-       * archive, must extract the string segment
-       * before the archive delimiter (i.e. path of
-       * 'parent' archive file) */
-      size_t len;
-
-      archive_path[0] = '\0';
-      len             = (size_t)(1 + archive_delim - start_content_path);
-      len             = (len < PATH_MAX_LENGTH) ? len : PATH_MAX_LENGTH;
-
-      strlcpy(archive_path, start_content_path, len * sizeof(char));
-
-      file_name       = path_basename(archive_path);
-   }
-   else
-      file_name       = path_basename(start_content_path);
-
    if (!string_is_empty(file_name))
-      strlcpy(menu->last_start_content.file_name, file_name,
-            sizeof(menu->last_start_content.file_name));
+   {
+      /* Cache file name */
+      const char *archive_delim = path_get_archive_delim(start_content_path);
+      if (archive_delim)
+      {
+         /* If path references a file inside an
+          * archive, must extract the string segment
+          * before the archive delimiter (i.e. path of
+          * 'parent' archive file) */
+         size_t len;
+
+         archive_path[0] = '\0';
+         len             = (size_t)(1 + archive_delim - start_content_path);
+         if (len >= PATH_MAX_LENGTH)
+            len          = PATH_MAX_LENGTH;
+
+         strlcpy(archive_path, start_content_path, len * sizeof(char));
+         fill_pathname_base(menu->last_start_content.file_name, archive_path,
+               sizeof(menu->last_start_content.file_name));
+      }
+      else
+         fill_pathname_base(menu->last_start_content.file_name,
+               start_content_path, sizeof(menu->last_start_content.file_name));
+   }
 }
 
 const char *menu_driver_get_pending_selection()
@@ -7230,9 +7226,9 @@ static void netplay_announce(struct rarch_state *p_rarch)
    }
    else
    {
+      const char *basename = path_basename(path_get(RARCH_PATH_BASENAME)); 
       net_http_urlencode(&gamename,
-         !string_is_empty(path_basename(path_get(RARCH_PATH_BASENAME))) ?
-         path_basename(path_get(RARCH_PATH_BASENAME)) : "N/A");
+         !string_is_empty(basename) ? basename : "N/A");
       net_http_urlencode(&subsystemname, "N/A");
    }
 
