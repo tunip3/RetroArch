@@ -842,8 +842,8 @@ static void *d3d11_gfx_init(const video_info_t* video,
 
 #ifdef __WINRT__
    if (!d3d11_init_swapchain(d3d11,
-            d3d11->vp.full_width,
-            d3d11->vp.full_height,
+            uwp_get_width(),
+            uwp_get_height(),
             &cached_device_d3d11,
             &cached_context_d3d11,
             uwp_get_corewindow()

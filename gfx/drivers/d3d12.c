@@ -951,7 +951,7 @@ static void *d3d12_gfx_init(const video_info_t* video,
       goto error;
 
 #ifdef __WINRT__
-   if (!d3d12_init_swapchain(d3d12, d3d12->vp.full_width, d3d12->vp.full_height, uwp_get_corewindow()))
+   if (!d3d12_init_swapchain(d3d12, uwp_get_height(), uwp_get_height(), uwp_get_corewindow()))
       goto error;
 #else
    if (!d3d12_init_swapchain(d3d12, d3d12->vp.full_width, d3d12->vp.full_height, main_window.hwnd))
